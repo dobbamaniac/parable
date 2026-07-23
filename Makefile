@@ -7,7 +7,7 @@ SRC_DIR := src
 OUT_DIR := out
 
 # Target executable name
-TARGET  := parable
+TARGET  := parabl
 
 # Source, Header, and Object files
 SRCS    := $(SRC_DIR)/main.c $(SRC_DIR)/lexer.c
