@@ -1,4 +1,9 @@
-typedef enum {
+#ifndef LEXER_H
+#define LEXER_H
+
+#include <stddef.h>
+
+typedef enum token {
   TOKEN_NUMBER,
   TOKEN_PLUS,
   TOKEN_MINUS,
@@ -8,18 +13,33 @@ typedef enum {
   TOKEN_RIGHT_PAREN,
   TOKEN_EOF,
   TOKEN_ERROR
-} TokenType;
-
-typedef struct {
-  TokenType type;
-  const char *start;
-  size_t length;
-  int line;
 } Token;
 
-typedef struct {
-  const char *source;
-  const char *start;
-  const char *current;
-  int line;
+typedef struct location {
+  size_t  line;
+  size_t  column;
+} Location;
+
+typedef struct token_data {
+  Token     type;       // Type of the token
+  char      *value;     // Value of the token
+  Location  location;   // Location of the token
+} TokenData;
+
+typedef struct lexer {
+  char      *start_token;
+  char      *current_token;
+  TokenData *tokens;
+  size_t    line_number;
+  char      *line_start;
+  size_t    token_count;
+  size_t    capacity;
 } Lexer;
+
+int lex(Lexer *lexer);
+
+void free_lexer(Lexer *lexer);
+
+char *token_to_string(Token token);
+
+#endif
