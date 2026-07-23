@@ -10,7 +10,6 @@ void handle_identifier(Lexer *lexer);
 
 int lex(Lexer *lexer) {
   while (*lexer->current_token != '\0') {
-    //printf("Current token: %c\n", *lexer->current_token);
     switch (*lexer->current_token) {
       case ' ':
         break;
@@ -60,7 +59,7 @@ int lex(Lexer *lexer) {
           number[string_length] = '\0';
 
           add_token(lexer, TOKEN_NUMBER, number);
-          fprintf(stdout, "TOKEN_NUMBER: %c\n", *number);
+          fprintf(stdout, "TOKEN_NUMBER: %s\n", number);
           continue;
         } else {
           fprintf(stderr, "Unknown token: %c\n", *lexer->current_token);
