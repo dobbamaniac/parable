@@ -5,95 +5,124 @@
 #include <stdlib.h>
 #include <string.h>
 
-void add_token(Lexer *lexer, Token type, char *val);
+void add_token(Lexer *lexer, Token type);
 void handle_identifier(Lexer *lexer);
+const char *token_type_name(Token type);
+void print_token(const TokenData *token);
 
-int lex(Lexer *lexer) {
-while (*lexer->current_token != '\0') {
-    switch (*lexer->current_token) {
-        case ' ':
-            break;
-        case '\n':
-            lexer->line_number++;
-            lexer->line_start = lexer->current_token + 1;
-            fprintf(stdout, "NEWLINE\n");
-            break;
-        case '(':
-            add_token(lexer, TOKEN_LEFT_PAREN, "(");
-            fprintf(stdout, "TOKEN_LEFT_PAREN\n");
-            break;
-        case ')':
-            add_token(lexer, TOKEN_RIGHT_PAREN, "(");
-            fprintf(stdout, "TOKEN_RIGHT_PAREN\n");
-            break;
-        case '+':
-            add_token(lexer, TOKEN_PLUS, "+");
-            fprintf(stdout, "TOKEN_PLUS\n");
-            break;
-        case '-':
-            add_token(lexer, TOKEN_MINUS, "-");
-            fprintf(stdout, "TOKEN_MINUS\n");
-            break;
-        case '*':
-            add_token(lexer, TOKEN_STAR, "*");
-            fprintf(stdout, "TOKEN_STAR\n");
-            break;
-        case '/':
-            if (*(lexer->current_token + 1) == '/') {
-                while (*lexer->current_token != '\n') lexer->current_token++;
-                continue;
-            } else {
-                add_token(lexer, TOKEN_SLASH, "/");
-                fprintf(stdout, "TOKEN_SLASH\n");
-            }
-            break;
-        default:
-            if (isdigit(*lexer->current_token)) {
-                char *string_start = lexer->current_token;
-
-                while (isdigit(*lexer->current_token)) lexer->current_token++;
-
-                int string_length = lexer->current_token - string_start;
-                char *number = (char *)malloc(string_length + 1);
-
-                strncpy(number, string_start, string_length);
-                number[string_length] = '\0';
-
-                add_token(lexer, TOKEN_NUMBER, number);
-                fprintf(stdout, "TOKEN_NUMBER: %s\n", number);
-                continue;
-            } else {
-                fprintf(stderr, "Unknown token: %c\n", *lexer->current_token);
-                return 1;
-            }
-            break;
-    }
-
-    // Advance token
-    lexer->current_token++;
+static char advance(Lexer *lexer) {
+    return *lexer->current_token++;
 }
 
-add_token(lexer, TOKEN_EOF, NULL);
+static char peek(const Lexer *lexer) {
+    return *lexer->current_token;
+}
+
+static char peek_next(const Lexer *lexer) {
+    if (*lexer->current_token == '\0') {
+        return '\0';
+    }
+    return lexer->current_token[1];
+}
+
+int lex(Lexer *lexer) {
+    while (peek(lexer) != '\0') {
+        lexer->start_token = lexer->current_token;
+
+        char c = advance(lexer);
+
+        switch (c) {
+            case ' ':
+            case '\t':
+            case '\r':
+                break;
+
+            case '\n':
+                lexer->line_number++;
+                lexer->line_start = lexer->current_token;
+                break;
+
+            case '(':
+                add_token(lexer, TOKEN_LEFT_PAREN);
+                break;
+
+            case ')':
+                add_token(lexer, TOKEN_RIGHT_PAREN);
+                break;
+
+            case '+':
+                add_token(lexer, TOKEN_PLUS);
+                break;
+
+            case '-':
+                add_token(lexer, TOKEN_MINUS);
+                break;
+
+            case '*':
+                add_token(lexer, TOKEN_STAR);
+                break;
+
+            case '/':
+                if (peek(lexer) == '/') {
+                    while (peek(lexer) != '\n' &&
+                           peek(lexer) != '\0') {
+                        advance(lexer);
+                    }
+                } else {
+                    add_token(lexer, TOKEN_SLASH);
+                }
+                break;
+
+            default:
+                if (isdigit((unsigned char)c)) {
+                    while (isdigit(
+                        (unsigned char)peek(lexer))) {
+                        advance(lexer);
+                    }
+
+                    add_token(lexer, TOKEN_NUMBER);
+                } else {
+                    fprintf(
+                        stderr,
+                        "%zu:%zu: unknown character '%c'\n",
+                        lexer->line_number,
+                        (size_t)(lexer->start_token -
+                                 lexer->line_start),
+                        c
+                    );
+
+                    return 1;
+                }
+                break;
+        }
+    }
+
+    lexer->start_token = lexer->current_token;
+    add_token(lexer, TOKEN_EOF);
     return 0;
 }
 
-void add_token(Lexer *lexer, Token type, char *value) {
+void add_token(Lexer *lexer, Token type) {
     if (lexer->token_count == lexer->capacity) {
         size_t new_capacity = lexer->capacity == 0 ? 8 : lexer->capacity * 2;
-        lexer->tokens = (TokenData *)realloc(lexer->tokens, new_capacity * sizeof(TokenData));
-        if (!lexer->tokens) {
+        TokenData *new_tokens = realloc(lexer->tokens, new_capacity * sizeof(*new_tokens));
+
+        if (new_tokens == NULL) {
             perror("Error reallocating memory");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
+        lexer->tokens = new_tokens;
         lexer->capacity = new_capacity;
     }
 
-    lexer->tokens[lexer->token_count].type = type;
-    lexer->tokens[lexer->token_count].value = value;
-    lexer->tokens[lexer->token_count].location.line = lexer->line_number;
-    lexer->tokens[lexer->token_count].location.column = lexer->current_token - lexer->line_start;
-    lexer->token_count++;
+    TokenData *token = &lexer->tokens[lexer->token_count++];
+
+    token->type = type;
+    token->start = lexer->start_token;
+    token->length = (size_t)(lexer->current_token - lexer->start_token);
+    token->location.line = lexer->line_number;
+    token->location.column = (size_t)(lexer->start_token - lexer->line_start);
 }
 
 //void handle_identifier(Lexer *lexer) {
@@ -109,10 +138,34 @@ void add_token(Lexer *lexer, Token type, char *value) {
 //}
 
 void free_lexer(Lexer *lexer) {
-    for (size_t i = 0; i < lexer->token_count; i++) {
-        if(lexer->tokens[i].type == TOKEN_NUMBER) {
-            free(lexer->tokens[i].value);
-        }
-    }
     free(lexer->tokens);
+}
+
+const char *token_type_name(Token type)
+{
+    switch (type) {
+        case TOKEN_NUMBER:      return "TOKEN_NUMBER";
+        case TOKEN_PLUS:        return "TOKEN_PLUS";
+        case TOKEN_MINUS:       return "TOKEN_MINUS";
+        case TOKEN_STAR:        return "TOKEN_STAR";
+        case TOKEN_SLASH:       return "TOKEN_SLASH";
+        case TOKEN_LEFT_PAREN:  return "TOKEN_LEFT_PAREN";
+        case TOKEN_RIGHT_PAREN: return "TOKEN_RIGHT_PAREN";
+        case TOKEN_EOF:         return "TOKEN_EOF";
+        case TOKEN_ERROR:       return "TOKEN_ERROR";
+    }
+
+    return "TOKEN_UNKNOWN";
+}
+
+void print_token(const TokenData *token)
+{
+    printf(
+        "%zu:%zu %-20s '%.*s'\n",
+        token->location.line,
+        token->location.column,
+        token_type_name(token->type),
+        (int)token->length,
+        token->start
+    );
 }

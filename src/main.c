@@ -36,7 +36,11 @@ int main(int argc, char *argv[]) {
     Lexer lexer = {
         .start_token = buffer,
         .current_token = buffer,
+        .tokens = NULL,
+        .line_number = 1,
         .line_start = buffer,
+        .token_count = 0,
+        .capacity = 0
     };
 
     // Call the lex function
@@ -49,7 +53,7 @@ int main(int argc, char *argv[]) {
     }
 
     for (size_t i = 0; i < lexer.token_count; i++) {
-        TokenData token = lexer.tokens[i];
+        print_token(&lexer.tokens[i]);
     }
 
     // Free the buffer

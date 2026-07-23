@@ -22,7 +22,8 @@ typedef struct location {
 
 typedef struct token_data {
     Token       type;       // Type of the token
-    char        *value;     // Value of the token
+    const char  *start;     // Start of the token
+    size_t      length;     // Length of the token
     Location    location;   // Location of the token
 } TokenData;
 
@@ -41,5 +42,7 @@ int lex(Lexer *lexer);
 void free_lexer(Lexer *lexer);
 
 char *token_to_string(Token token);
+
+void print_token(const TokenData *token);
 
 #endif
