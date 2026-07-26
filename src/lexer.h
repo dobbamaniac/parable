@@ -13,7 +13,7 @@ typedef enum token {
     TOKEN_RIGHT_PAREN,
     TOKEN_EOF,
     TOKEN_ERROR
-} Token;
+} TokenKind;
 
 typedef struct location {
     size_t  line;
@@ -21,16 +21,16 @@ typedef struct location {
 } Location;
 
 typedef struct token_data {
-    Token       type;       // Type of the token
+    TokenKind   kind;       // Kind of the token
     const char  *start;     // Start of the token
     size_t      length;     // Length of the token
     Location    location;   // Location of the token
-} TokenData;
+} Token;
 
 typedef struct lexer {
     char        *start_token;
     char        *current_token;
-    TokenData   *tokens;
+    Token       *tokens;
     size_t      line_number;
     char        *line_start;
     size_t      token_count;
@@ -41,8 +41,8 @@ int lex(Lexer *lexer);
 
 void free_lexer(Lexer *lexer);
 
-char *token_to_string(Token token);
+const char *token_type_name(TokenKind token);
 
-void print_token(const TokenData *token);
+void print_token(const Token *token);
 
 #endif

@@ -5,10 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-void add_token(Lexer *lexer, Token type);
+void add_token(Lexer *lexer, TokenKind kind);
 void handle_identifier(Lexer *lexer);
-const char *token_type_name(Token type);
-void print_token(const TokenData *token);
+const char *token_type_name(TokenKind kind);
 
 static char advance(Lexer *lexer) {
     return *lexer->current_token++;
@@ -16,13 +15,6 @@ static char advance(Lexer *lexer) {
 
 static char peek(const Lexer *lexer) {
     return *lexer->current_token;
-}
-
-static char peek_next(const Lexer *lexer) {
-    if (*lexer->current_token == '\0') {
-        return '\0';
-    }
-    return lexer->current_token[1];
 }
 
 int lex(Lexer *lexer) {
@@ -102,10 +94,10 @@ int lex(Lexer *lexer) {
     return 0;
 }
 
-void add_token(Lexer *lexer, Token type) {
+void add_token(Lexer *lexer, TokenKind kind) {
     if (lexer->token_count == lexer->capacity) {
         size_t new_capacity = lexer->capacity == 0 ? 8 : lexer->capacity * 2;
-        TokenData *new_tokens = realloc(lexer->tokens, new_capacity * sizeof(*new_tokens));
+        Token *new_tokens = realloc(lexer->tokens, new_capacity * sizeof(*new_tokens));
 
         if (new_tokens == NULL) {
             perror("Error reallocating memory");
@@ -116,9 +108,9 @@ void add_token(Lexer *lexer, Token type) {
         lexer->capacity = new_capacity;
     }
 
-    TokenData *token = &lexer->tokens[lexer->token_count++];
+    Token *token = &lexer->tokens[lexer->token_count++];
 
-    token->type = type;
+    token->kind = kind;
     token->start = lexer->start_token;
     token->length = (size_t)(lexer->current_token - lexer->start_token);
     token->location.line = lexer->line_number;
@@ -141,9 +133,9 @@ void free_lexer(Lexer *lexer) {
     free(lexer->tokens);
 }
 
-const char *token_type_name(Token type)
+const char *token_type_name(TokenKind kind)
 {
-    switch (type) {
+    switch (kind) {
         case TOKEN_NUMBER:      return "TOKEN_NUMBER";
         case TOKEN_PLUS:        return "TOKEN_PLUS";
         case TOKEN_MINUS:       return "TOKEN_MINUS";
@@ -158,13 +150,13 @@ const char *token_type_name(Token type)
     return "TOKEN_UNKNOWN";
 }
 
-void print_token(const TokenData *token)
+void print_token(const Token *token)
 {
     printf(
         "%zu:%zu %-20s '%.*s'\n",
         token->location.line,
         token->location.column,
-        token_type_name(token->type),
+        token_type_name(token->kind),
         (int)token->length,
         token->start
     );
