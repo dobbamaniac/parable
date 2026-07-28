@@ -33,15 +33,8 @@ int main(int argc, char *argv[]) {
     buffer[file_size] = '\0';
     fclose(file);
 
-    Lexer lexer = {
-        .start_token = buffer,
-        .current_token = buffer,
-        .tokens = NULL,
-        .line_number = 1,
-        .line_start = buffer,
-        .token_count = 0,
-        .capacity = 0
-    };
+    Lexer lexer;
+    init_lexer(&lexer, buffer);
 
     // Call the lex function
     int result = lex(&lexer);

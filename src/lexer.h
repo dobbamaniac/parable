@@ -37,7 +37,7 @@ typedef struct {
     size_t      capacity;
 } Lexer;
 
-Lexer *init_lexer(Lexer *lexer, char *buffer);
+void init_lexer(Lexer *lexer, char *buffer);
 
 int lex(Lexer *lexer);
 

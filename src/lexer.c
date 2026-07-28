@@ -129,9 +129,14 @@ void add_token(Lexer *lexer, TokenKind kind) {
 //    identifier[string_length] = '\0';
 //}
 
-Lexer *init_lexer(Lexer *lexer, char *buffer) {
+void init_lexer(Lexer *lexer, char *buffer) {
     lexer->start_token = buffer;
     lexer->current_token = buffer;
+    lexer->tokens = NULL;
+    lexer->line_number = 1;
+    lexer->line_start = buffer;
+    lexer->token_count = 0;
+    lexer->capacity = 0;
 }
 
 void free_lexer(Lexer *lexer) {
