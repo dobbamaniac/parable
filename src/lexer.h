@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-typedef enum token {
+typedef enum {
     TOKEN_NUMBER,
     TOKEN_PLUS,
     TOKEN_MINUS,
@@ -15,19 +15,19 @@ typedef enum token {
     TOKEN_ERROR
 } TokenKind;
 
-typedef struct location {
+typedef struct {
     size_t  line;
     size_t  column;
 } Location;
 
-typedef struct token_data {
+typedef struct {
     TokenKind   kind;       // Kind of the token
     const char  *start;     // Start of the token
     size_t      length;     // Length of the token
     Location    location;   // Location of the token
 } Token;
 
-typedef struct lexer {
+typedef struct {
     char        *start_token;
     char        *current_token;
     Token       *tokens;
@@ -36,6 +36,8 @@ typedef struct lexer {
     size_t      token_count;
     size_t      capacity;
 } Lexer;
+
+Lexer *init_lexer(Lexer *lexer, char *buffer);
 
 int lex(Lexer *lexer);
 

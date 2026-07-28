@@ -129,6 +129,11 @@ void add_token(Lexer *lexer, TokenKind kind) {
 //    identifier[string_length] = '\0';
 //}
 
+Lexer *init_lexer(Lexer *lexer, char *buffer) {
+    lexer->start_token = buffer;
+    lexer->current_token = buffer;
+}
+
 void free_lexer(Lexer *lexer) {
     free(lexer->tokens);
 }
